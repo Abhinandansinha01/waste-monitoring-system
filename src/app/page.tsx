@@ -13,7 +13,10 @@ export default function Home() {
           <Recycle size={64} className="text-primary" style={{ color: '#22c55e' }} />
         </div>
         <h1>EcoSort AI</h1>
-        <p>Smart Waste Segregation & Monitoring System</p>
+        <p className="mb-4">Smart Waste Segregation & Monitoring System</p>
+        <Link href="/about" className="btn" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid var(--border)' }}>
+          View Project Presentation
+        </Link>
       </header>
 
       <div className="dashboard-grid">
