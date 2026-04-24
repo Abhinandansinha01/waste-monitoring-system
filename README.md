@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌱 EcoSort AI - Smart Waste Segregation and Monitoring System
 
-## Getting Started
+![EcoSort AI](public/lpu_logo.png)
 
-First, run the development server:
+Welcome to **EcoSort AI**, an intelligent waste management platform that utilizes advanced Artificial Intelligence (NVIDIA Nemotron Vision & Language Models) to autonomously classify waste into proper categories (Organic, Recyclable, Hazardous, General) and monitor IoT bin fill levels in real-time.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Live Demo & Presentation
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This project is deployed live on Vercel. You can access the demonstration and dashboard from anywhere:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* **▶️ [Project Presentation (Slideshow)](https://waste-monitoring-system.vercel.app/)**
+* **📊 [Live AI Dashboard](https://waste-monitoring-system.vercel.app/LIVE_DASHBOARD.html)**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+*(Note: The main URL automatically redirects to the presentation. You can launch the Live Dashboard from the final slide of the presentation or via the direct link above.)*
 
-## Learn More
+## ✨ Features
 
-To learn more about Next.js, take a look at the following resources:
+* **AI Waste Classifier (Nemotron Pipeline)**: Uses device cameras or image uploads to scan waste items. It automatically identifies the material and categorizes it using a powerful two-step vision/text AI pipeline.
+* **Smart IoT Bin Monitoring**: Real-time visual monitoring of bin capacities with predictive algorithms based on AI classifications.
+* **Environmental Impact Tracking**: Automatically calculates toxicity levels, recyclability scores, and estimated CO2 emissions saved from proper segregation.
+* **Presentation Mode**: Built-in cinematic presentation system for seminar demonstrations.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Technology Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* **Frontend**: Vanilla JS, HTML5, TailwindCSS, Chart.js, Lucide Icons
+* **Backend**: Next.js App Router (API Proxy)
+* **AI Provider**: OpenRouter API
+* **AI Models**: `nvidia/nemotron-nano-12b-v2-vl` (Vision) & `nvidia/nemotron-3-super-120b-a12b` (Text Analysis)
+* **Deployment**: Vercel
 
-## Deploy on Vercel
+## 💻 Running Locally
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If you want to run the project entirely on your local machine instead of using the Vercel link:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Clone this repository.
+2. Open the directory and ensure you have Node.js installed.
+3. Rename `.env.example` to `.env.local` and add your OpenRouter API key.
+4. Run the `START_ECOSORT.bat` script (Windows) to automatically start the backend server and open the UI.
+
+## 👨‍💻 Developed By
+
+**Abhinandan Sinha**  
+Registration No: **12303165**  
+Roll No: **27**  
+
+[🔗 Connect on LinkedIn](https://www.linkedin.com/in/abhinandansinha01/)
