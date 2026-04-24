@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSort AI | Nemotron-Powered Waste Analysis Dashboard</title>
+    <meta name="description" content="Real-time AI waste classification and toxicity analysis powered by NVIDIA Nemotron">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#22c55e', secondary: '#3b82f6', accent: '#f59e0b',
+                        danger: '#ef4444', dark: '#050b1a', glass: 'rgba(15, 23, 42, 0.7)',
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050b1a; color: #f8fafc; min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(34, 197, 94, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.5rem; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(34, 197, 94, 0.3);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5); transform: translateY(-4px);
+        }
+        .upload-zone { border: 2px dashed rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: #22c55e; background: rgba(34, 197, 94, 0.05);
+        }
+        .progress-bar { transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; } 100% { background-position: 200% 0; }
+        }
+        .shimmer-placeholder {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+            background-size: 200% 100%; animation: shimmer 2s infinite; border-radius: 0.75rem;
+        }
+        @keyframes slide-up {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up { animation: slide-up 0.5s ease-out; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.6s ease-out; }
+        .detail-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .metric-bar-track {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.05);
+            border-radius: 9999px; overflow: hidden;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-primary/10 rounded-lg">
+                        <i data-lucide="recycle" class="text-primary w-6 h-6"></i>
+                    </div>
+                    <span class="text-primary font-bold tracking-widest text-xs uppercase">EcoSort AI v3.0 — Nemotron Powered</span>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold font-heading bg-gradient-to-r from-white via-slate-200 to-primary bg-clip-text text-transparent">
+                    Smart Waste Dashboard
+                </h1>
+                <p class="text-slate-400 mt-2 font-light">Real-time AI Toxicity Analysis & Waste Classification</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="glass-card px-6 py-3 flex items-center gap-4">
+                    <button id="history-toggle-btn" class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mr-4 border-r border-slate-700 pr-4">
+                        <i data-lucide="history" class="w-4 h-4"></i>
+                        <span class="text-xs font-bold uppercase tracking-wider">History</span>
+                    </button>
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">AI Engine</p>
+                        <p class="text-violet-400 font-bold text-sm">NEMOTRON ULTRA</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center relative">
+                        <i data-lucide="brain" class="text-violet-400 w-5 h-5"></i>
+                        <div class="absolute inset-0 bg-violet-500/20 rounded-full animate-ping"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column: AI Classifier -->
+            <div class="lg:col-span-7 space-y-8">
+                <div class="glass-card p-8 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="scan-eye" class="text-primary w-6 h-6"></i>
+                            <h2 class="text-xl font-bold font-heading">AI Material Identification</h2>
+                        </div>
+                        <span class="text-[10px] px-3 py-1 bg-violet-500/20 rounded-full text-violet-400 border border-violet-500/30 font-bold">NEMOTRON AI</span>
+                    </div>
+
+                    <!-- Upload Area -->
+                    <div id="upload-zone" class="upload-zone rounded-3xl p-12 flex flex-col items-center justify-center cursor-pointer text-center group">
+                        <input type="file" id="file-input" class="hidden" accept="image/*">
+                        <!-- Camera hidden input (for mobile/tablet direct capture) -->
+                        <input type="file" id="camera-input" class="hidden" accept="image/*" capture="environment">
+                        
+                        <div class="flex gap-4 mb-6">
+                            <div id="btn-upload" class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center hover:scale-110 transition-transform cursor-pointer border border-primary/20">
+                                <i data-lucide="upload-cloud" class="text-primary w-8 h-8"></i>
+                            </div>
+                            <div id="btn-camera" class="w-16 h-16 bg-violet-500/10 rounded-2xl flex items-center justify-center hover:scale-110 transition-transform cursor-pointer border border-violet-500/20">
+                                <i data-lucide="camera" class="text-violet-400 w-8 h-8"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2 text-white">Upload or Capture Waste Image</h3>
+                        <p class="text-slate-500 text-sm max-w-xs">Nemotron AI will analyze toxicity, recyclability, and environmental hazard in real-time.</p>
+                        
+                        <!-- Video element for desktop webcam stream -->
+                        <div id="webcam-container" class="hidden w-full mt-6 rounded-2xl overflow-hidden border border-white/10 relative">
+                            <video id="webcam-video" class="w-full h-auto bg-black" autoplay playsinline></video>
+                            <button id="capture-btn" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-violet-600 hover:bg-violet-500 text-white p-3 rounded-full shadow-lg border-2 border-white/20 transition-colors">
+                                <i data-lucide="aperture" class="w-6 h-6"></i>
+                            </button>
+                            <button id="close-camera-btn" class="absolute top-4 right-4 bg-black/50 p-2 rounded-full text-white hover:bg-danger transition-colors">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preview Area -->
+                    <div id="preview-container" class="hidden space-y-6 animate-fade-in">
+                        <div class="relative rounded-3xl overflow-hidden border border-white/5 group">
+                            <img id="image-preview" src="#" alt="Preview" class="w-full max-h-[400px] object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-transparent opacity-60"></div>
+                            <button id="reset-btn" class="absolute top-4 right-4 bg-dark/60 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-danger transition-colors">
+                                New Analysis
+                            </button>
+                        </div>
+
+                        <!-- Results Card -->
+                        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+                            <div id="analyzing-state" class="flex flex-col items-center py-8">
+                                <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                                <p class="text-slate-400 font-medium">Nemotron AI Analyzing...</p>
+                            </div>
+                            <div id="result-state" class="hidden animate-slide-up">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div>
+                                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Detected Object</p>
+                                        <h3 id="object-name" class="text-3xl font-black text-white capitalize">---</h3>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">AI Confidence</p>
+                                        <h3 id="confidence-score" class="text-3xl font-black text-primary">0%</h3>
+                                    </div>
+                                </div>
+                                <div class="p-6 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center gap-6">
+                                    <div id="category-icon-bg" class="w-14 h-14 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                        <i id="category-icon" data-lucide="info" class="text-indigo-400 w-8 h-8"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Recommended Segregation</p>
+                                        <h3 id="category-name" class="text-2xl font-bold text-white">Processing...</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Deep Analysis Panel -->
+                <div id="ai-detail-panel" class="hidden glass-card p-8 animate-slide-up">
+                    <div class="flex items-center gap-3 mb-8">
+                        <i data-lucide="activity" class="text-violet-400 w-6 h-6"></i>
+                        <h2 class="text-xl font-bold font-heading">Nemotron Deep Analysis</h2>
+                    </div>
+
+                    <!-- Metric Bars -->
+                    <div class="space-y-6 mb-8">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                    <i data-lucide="flask-conical" class="w-4 h-4 text-rose-400"></i> Toxicity Level
+                                </span>
+                                <span id="toxicity-value" class="text-sm font-black text-white">0%</span>
+                            </div>
+                            <div class="metric-bar-track"><div id="toxicity-bar" class="h-full rounded-full" style="width:0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                    <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-400"></i> Recyclability
+                                </span>
+                                <span id="recyclability-value" class="text-sm font-black text-white">0%</span>
+                            </div>
+                            <div class="metric-bar-track"><div id="recyclability-bar" class="h-full rounded-full" style="width:0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i> Environmental Hazard
+                                </span>
+                                <span id="hazard-value" class="text-sm font-black text-white">0%</span>
+                            </div>
+                            <div class="metric-bar-track"><div id="hazard-bar" class="h-full rounded-full" style="width:0%"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Rows -->
+                    <div class="bg-white/5 rounded-2xl p-6 border border-white/5">
+                        <div class="detail-row">
+                            <span class="text-slate-500 text-sm font-bold">Disposal Method</span>
+                            <span id="disposal-method" class="text-white text-sm font-medium text-right max-w-[60%]">—</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="text-slate-500 text-sm font-bold">Material Composition</span>
+                            <span id="material-comp" class="text-white text-sm font-medium text-right max-w-[60%]">—</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="text-slate-500 text-sm font-bold">Decomposition Time</span>
+                            <span id="decomp-time" class="text-white text-sm font-medium text-right max-w-[60%]">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="mt-6 p-5 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="message-square" class="w-4 h-4 text-violet-400"></i>
+                            <span class="text-[10px] text-violet-400 uppercase font-bold tracking-widest">AI Analysis Summary</span>
+                        </div>
+                        <p id="analysis-summary" class="text-slate-300 text-sm leading-relaxed">—</p>
+                    </div>
+                </div>
+
+                <!-- Stats Section -->
+                <div id="stats-placeholder" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="glass-card p-6 flex flex-col items-center text-center">
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-3">Items Analyzed</p>
+                        <div class="shimmer-placeholder w-20 h-8 mb-2"></div>
+                        <p class="text-slate-600 text-[10px] font-bold">UPLOAD TO START</p>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col items-center text-center">
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-3">Avg Toxicity</p>
+                        <div class="shimmer-placeholder w-20 h-8 mb-2"></div>
+                        <p class="text-slate-600 text-[10px] font-bold">NO DATA</p>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col items-center text-center">
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-3">Recyclability</p>
+                        <div class="shimmer-placeholder w-20 h-8 mb-2"></div>
+                        <p class="text-slate-600 text-[10px] font-bold">NO DATA</p>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col items-center text-center">
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-3">CO₂ Impact</p>
+                        <div class="shimmer-placeholder w-20 h-8 mb-2"></div>
+                        <p class="text-slate-600 text-[10px] font-bold">NO DATA</p>
+                    </div>
+                </div>
+
+                <!-- Real Stats (hidden until first analysis) -->
+                <div id="stats-panel" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 animate-slide-up">
+                    <div class="glass-card p-6 flex flex-col items-center text-center">
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Items Analyzed</p>
+                        <h4 id="stat-total" class="text-3xl font-black text-white">0</h4>
+                        <p class="text-emerald-400 text-[10px] font-bold mt-1">THIS SESSION</p>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col items-center text-center">
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Avg Toxicity</p>
+                        <h4 id="stat-toxicity" class="text-3xl font-black text-white">0%</h4>
+                        <p class="text-rose-400 text-[10px] font-bold mt-1">ACROSS ITEMS</p>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col items-center text-center">
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Recyclability</p>
+                        <h4 id="stat-recyclability" class="text-3xl font-black text-white">0%</h4>
+                        <p class="text-emerald-400 text-[10px] font-bold mt-1">AVG SCORE</p>
+                    </div>
+                    <div class="glass-card p-6 flex flex-col items-center text-center group cursor-pointer relative overflow-hidden" id="impact-card-trigger">
+                        <div class="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors"></div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2 relative z-10">CO₂ Impact</p>
+                        <h4 id="stat-co2" class="text-3xl font-black text-white relative z-10">0 kg</h4>
+                        <p class="text-amber-400 text-[10px] font-bold mt-1 flex items-center justify-center gap-1 relative z-10">
+                            VIEW DETAILS <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Environmental Impact Dashboard (Expanded) -->
+                <div id="impact-dashboard" class="hidden glass-card p-8 animate-slide-up bg-gradient-to-br from-slate-900/80 to-emerald-900/20 border-emerald-500/20">
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="globe-2" class="text-emerald-400 w-6 h-6"></i>
+                            <h2 class="text-xl font-bold font-heading text-emerald-50">Environmental Impact</h2>
+                        </div>
+                        <button id="close-impact-btn" class="text-slate-400 hover:text-white transition-colors">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="flex flex-col items-center justify-center p-6 bg-black/20 rounded-2xl border border-white/5 relative overflow-hidden">
+                            <div class="absolute -right-10 -bottom-10 opacity-10 text-emerald-400">
+                                <i data-lucide="tree-pine" class="w-48 h-48"></i>
+                            </div>
+                            <h4 class="text-5xl font-black text-emerald-400 mb-2 relative z-10" id="impact-trees-saved">0.0</h4>
+                            <p class="text-sm font-bold text-slate-300 uppercase tracking-widest relative z-10">Tree-Days of CO₂ Offset</p>
+                            <p class="text-xs text-slate-500 mt-2 text-center max-w-[80%] relative z-10">Proper segregation of these items is equivalent to the carbon absorbed by this many trees in a day.</p>
+                        </div>
+                        
+                        <div class="p-6 bg-black/20 rounded-2xl border border-white/5">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 text-center">Waste Category Breakdown</p>
+                            <div class="h-48 w-full relative flex items-center justify-center">
+                                <canvas id="category-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Bin Monitoring -->
+            <div class="lg:col-span-5">
+                <div class="glass-card p-8 h-full">
+                    <div class="flex items-center justify-between mb-10">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="bar-chart-3" class="text-secondary w-6 h-6"></i>
+                            <h2 class="text-xl font-bold font-heading">IoT Bin Monitoring</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                            <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+                            <span class="text-[9px] font-bold text-emerald-400 tracking-tighter uppercase">Live</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-10">
+                        <!-- Organic Bin -->
+                        <div class="bin-item group">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i data-lucide="leaf" class="text-emerald-500 w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-white">Organic Waste</h4>
+                                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Zone A-01</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span id="bin-organic-text" class="text-2xl font-black text-white">0%</span>
+                                    <p id="bin-organic-status" class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Empty</p>
+                                </div>
+                            </div>
+                            <div class="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                <div id="bin-organic-bar" class="progress-bar h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-700" style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Recyclable Bin -->
+                        <div class="bin-item group">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i data-lucide="refresh-cw" class="text-blue-500 w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-white">Recyclable</h4>
+                                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Zone A-02</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span id="bin-recyclable-text" class="text-2xl font-black text-white">0%</span>
+                                    <p id="bin-recyclable-status" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Empty</p>
+                                </div>
+                            </div>
+                            <div class="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                <div id="bin-recyclable-bar" class="progress-bar h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-700" style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Hazardous Bin -->
+                        <div class="bin-item group">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-rose-500/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i data-lucide="skull" class="text-rose-500 w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-white">Hazardous</h4>
+                                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Zone B-04</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span id="bin-hazardous-text" class="text-2xl font-black text-white">0%</span>
+                                    <p id="bin-hazardous-status" class="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Empty</p>
+                                </div>
+                            </div>
+                            <div class="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                <div id="bin-hazardous-bar" class="progress-bar h-full rounded-full bg-gradient-to-r from-rose-500 to-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)] transition-all duration-700" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Action -->
+                    <div class="mt-12 p-6 rounded-2xl bg-slate-900/50 border border-white/5 space-y-4">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-500 font-bold tracking-widest uppercase">Maintenance Signal</span>
+                            <span id="maintenance-signal" class="text-slate-600 font-bold">No data yet</span>
+                        </div>
+                        <button id="optimize-btn"
+                            class="w-full py-3 bg-secondary/10 hover:bg-secondary/20 border border-secondary/30 rounded-xl text-secondary font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="map-pin" class="w-3 h-3"></i>
+                            Optimize Collection Route
+                        </button>
+                        <button id="reset-bins-btn"
+                            class="w-full py-2 text-slate-500 hover:text-white text-[10px] uppercase font-bold tracking-[0.2em] transition-colors">
+                            Reset Session Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Sidebar Overlay -->
+        <div id="history-sidebar" class="fixed inset-y-0 right-0 w-full md:w-96 bg-slate-900/95 backdrop-blur-xl border-l border-white/10 shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col">
+            <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="history" class="text-slate-300 w-5 h-5"></i>
+                    <h2 class="text-lg font-bold text-white">Analysis History</h2>
+                </div>
+                <button id="close-history-btn" class="text-slate-400 hover:text-white transition-colors p-2">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3">
+                <div class="text-center py-10">
+                    <i data-lucide="inbox" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
+                    <p class="text-slate-500 text-sm">No items analyzed yet.</p>
+                </div>
+            </div>
+            <div class="p-4 border-t border-white/10">
+                <button id="clear-history-btn" class="w-full py-3 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl text-xs font-bold tracking-widest uppercase transition-colors">
+                    Clear History
+                </button>
+            </div>
+        </div>
+        <!-- History Overlay Backdrop -->
+        <div id="history-backdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden transition-opacity opacity-0"></div>
+
+        <footer class="mt-16 text-center text-slate-600">
+            <p class="text-xs uppercase tracking-[0.3em] font-bold">EcoSort AI — Powered by NVIDIA Nemotron © 2026</p>
+        </footer>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
