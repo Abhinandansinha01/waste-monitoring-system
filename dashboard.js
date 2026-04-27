@@ -1,6 +1,6 @@
 // EcoSort AI Dashboard - Nemotron Two-Step Pipeline
 // API key is injected at deploy time via GitHub Actions (never in source code)
-const NEMOTRON_VL = 'nvidia/nemotron-nano-12b-v2-vl:free';          // Step 1: Vision (sees the image)
+const NEMOTRON_VL = 'google/gemma-4-31b-it:free';          // Step 1: Vision (sees the image) - using Gemma 4 as Nemotron VL is unstable
 const NEMOTRON_ULTRA = 'nvidia/nemotron-3-super-120b-a12b:free';   // Step 2: Deep analysis (text)
 const BUILTIN_API_KEY = '__OPENROUTER_API_KEY__';
 
@@ -251,7 +251,7 @@ async function analyzeWithNemotron(base64Image) {
             <div class="flex flex-col items-center py-8">
                 <div class="w-12 h-12 border-4 border-violet-400 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <p class="text-violet-400 font-bold mb-1">Step 1/2 — Vision Analysis</p>
-                <p class="text-slate-500 text-sm">Nemotron VL is examining the image...</p>
+                <p class="text-slate-500 text-sm">Vision AI is examining the image...</p>
             </div>`;
 
         // STEP 1: Vision model describes the image
