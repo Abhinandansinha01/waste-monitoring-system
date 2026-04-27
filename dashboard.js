@@ -259,6 +259,8 @@ async function analyzeWithNemotron(base64Image) {
 
         let imageDescription = "A waste item identified from the camera feed.";
         let usingFallback = false;
+        let jsonStr = "";
+
         try {
             imageDescription = await callOpenRouter(NEMOTRON_VL, [{
                 role: 'user',
@@ -268,56 +270,15 @@ async function analyzeWithNemotron(base64Image) {
                 ]
             }], 500);
             console.log('Vision description:', imageDescription);
-        } catch (err) {
-            console.warn('Vision API failed, using fallback mode:', err);
-            usingFallback = true;
-        }
 
-        // Update UI to show step 2
-        $('analyzing-state').innerHTML = `
-            <div class="flex flex-col items-center py-8">
-                <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p class="text-primary font-bold mb-1">Step 2/2 — Deep Analysis</p>
-                <p class="text-slate-500 text-sm">Nemotron Ultra computing toxicity & metrics...</p>
-            </div>`;
+            // Update UI to show step 2
+            $('analyzing-state').innerHTML = `
+                <div class="flex flex-col items-center py-8">
+                    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p class="text-primary font-bold mb-1">Step 2/2 — Deep Analysis</p>
+                    <p class="text-slate-500 text-sm">Nemotron Ultra computing toxicity & metrics...</p>
+                </div>`;
 
-        // STEP 2: Text model does the deep waste analysis
-        let jsonStr = "";
-        
-        if (usingFallback) {
-            // Seminar Presentation Fallback: Ensure it always works even if OpenRouter is down
-            showToast('OpenRouter API Error: Using presentation mock data.', 'error');
-            await new Promise(r => setTimeout(r, 1500)); // Simulate processing delay
-            const fallbacks = [
-                {
-                    object_name: "Plastic Beverage Bottle", category: "Recyclable",
-                    toxicity_level: 15, recyclability_score: 95, environmental_hazard: 30, co2_impact_kg: 0.12,
-                    disposal_method: "Empty liquids, crush slightly, and place in recycling bin.", material_composition: "PET Plastic (Polyethylene Terephthalate)",
-                    decomposition_time: "450 years", analysis_summary: "PET plastics are highly recyclable. Proper segregation prevents microplastic breakdown in natural environments."
-                },
-                {
-                    object_name: "Mixed Organic Food Waste", category: "Organic",
-                    toxicity_level: 5, recyclability_score: 100, environmental_hazard: 10, co2_impact_kg: 0.05,
-                    disposal_method: "Place in green compost bin or biodegradable bag.", material_composition: "Decomposing plant and food matter",
-                    decomposition_time: "2-6 weeks", analysis_summary: "Composting organic matter significantly reduces methane gas emissions compared to landfill disposal."
-                },
-                {
-                    object_name: "Alkaline Battery", category: "Hazardous",
-                    toxicity_level: 88, recyclability_score: 35, environmental_hazard: 92, co2_impact_kg: 1.4,
-                    disposal_method: "Must be taken to an e-waste or specialized battery collection point.", material_composition: "Zinc, Manganese Dioxide, Steel",
-                    decomposition_time: "100+ years", analysis_summary: "Batteries contain toxic heavy metals that can leach into groundwater. They require specialized recycling facilities."
-                },
-                {
-                    object_name: "Used Snack Wrapper", category: "General",
-                    toxicity_level: 25, recyclability_score: 5, environmental_hazard: 45, co2_impact_kg: 0.08,
-                    disposal_method: "Dispose in the general waste landfill bin.", material_composition: "Multi-layer laminate (Plastic and Aluminum)",
-                    decomposition_time: "80 years", analysis_summary: "Mixed material laminates are extremely difficult to separate and recycle, requiring disposal in standard landfill streams."
-                }
-            ];
-            const fb = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-            fb.confidence = Math.floor(Math.random() * 10) + 85;
-            jsonStr = JSON.stringify(fb);
-        } else {
             const analysisPrompt = `You are an expert waste management and environmental science AI. A vision AI has described the following waste item from an uploaded image:
 
 --- IMAGE DESCRIPTION ---
@@ -352,6 +313,44 @@ Rules: all scores 0-100. toxicity_level: 0=completely safe, 100=extremely toxic.
             const braceMatch = jsonStr.match(/\{[\s\S]*\}/);
             if (braceMatch) jsonStr = braceMatch[0];
             jsonStr = jsonStr.trim();
+        } catch (err) {
+            console.warn('API Pipeline failed, using fallback mode:', err);
+            usingFallback = true;
+        }
+
+        if (usingFallback) {
+            // Seminar Presentation Fallback: Ensure it always works even if OpenRouter is down
+            showToast('OpenRouter API Error: Using presentation mock data.', 'error');
+            await new Promise(r => setTimeout(r, 1500)); // Simulate processing delay
+            const fallbacks = [
+                {
+                    object_name: "Plastic Beverage Bottle", category: "Recyclable",
+                    toxicity_level: 15, recyclability_score: 95, environmental_hazard: 30, co2_impact_kg: 0.12,
+                    disposal_method: "Empty liquids, crush slightly, and place in recycling bin.", material_composition: "PET Plastic (Polyethylene Terephthalate)",
+                    decomposition_time: "450 years", analysis_summary: "PET plastics are highly recyclable. Proper segregation prevents microplastic breakdown in natural environments."
+                },
+                {
+                    object_name: "Mixed Organic Food Waste", category: "Organic",
+                    toxicity_level: 5, recyclability_score: 100, environmental_hazard: 10, co2_impact_kg: 0.05,
+                    disposal_method: "Place in green compost bin or biodegradable bag.", material_composition: "Decomposing plant and food matter",
+                    decomposition_time: "2-6 weeks", analysis_summary: "Composting organic matter significantly reduces methane gas emissions compared to landfill disposal."
+                },
+                {
+                    object_name: "Alkaline Battery", category: "Hazardous",
+                    toxicity_level: 88, recyclability_score: 35, environmental_hazard: 92, co2_impact_kg: 1.4,
+                    disposal_method: "Must be taken to an e-waste or specialized battery collection point.", material_composition: "Zinc, Manganese Dioxide, Steel",
+                    decomposition_time: "100+ years", analysis_summary: "Batteries contain toxic heavy metals that can leach into groundwater. They require specialized recycling facilities."
+                },
+                {
+                    object_name: "Used Snack Wrapper", category: "General",
+                    toxicity_level: 25, recyclability_score: 5, environmental_hazard: 45, co2_impact_kg: 0.08,
+                    disposal_method: "Dispose in the general waste landfill bin.", material_composition: "Multi-layer laminate (Plastic and Aluminum)",
+                    decomposition_time: "80 years", analysis_summary: "Mixed material laminates are extremely difficult to separate and recycle, requiring disposal in standard landfill streams."
+                }
+            ];
+            const fb = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+            fb.confidence = Math.floor(Math.random() * 10) + 85;
+            jsonStr = JSON.stringify(fb);
         }
 
         const result = JSON.parse(jsonStr);
