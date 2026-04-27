@@ -11,7 +11,7 @@ This project is deployed live on GitHub Pages:
 * **📊 [Live AI Dashboard](https://abhinandansinha01.github.io/waste-monitoring-system/)**
 * **▶️ [Project Presentation](https://abhinandansinha01.github.io/waste-monitoring-system/PRESENTATION.html)**
 
-> **Note:** Click the ⚙️ settings icon in the dashboard header to enter your [OpenRouter API key](https://openrouter.ai/keys) for live AI analysis. Without a key, the dashboard runs in demo/fallback mode.
+> **Note:** The dashboard comes with built-in AI functionality — just upload or capture a waste image and the Nemotron AI pipeline will analyze it automatically. No setup required!
 
 ## ✨ Features
 
@@ -19,25 +19,21 @@ This project is deployed live on GitHub Pages:
 * **Smart IoT Bin Monitoring**: Real-time visual monitoring of bin capacities with predictive algorithms based on AI classifications.
 * **Environmental Impact Tracking**: Automatically calculates toxicity levels, recyclability scores, and estimated CO2 emissions saved from proper segregation.
 * **Presentation Mode**: Built-in cinematic presentation system for seminar demonstrations.
-* **Secure API Key Handling**: API key is stored in browser localStorage only — never committed to source code.
+* **Secure API Key Handling**: API key is injected at deploy time via GitHub Actions CI/CD — never committed to source code.
 
 ## 🛠️ Technology Stack
 
 * **Frontend**: Vanilla JS, HTML5, TailwindCSS, Chart.js, Lucide Icons
 * **AI Provider**: OpenRouter API (called directly from client)
 * **AI Models**: `nvidia/nemotron-nano-12b-v2-vl` (Vision) & `nvidia/nemotron-3-super-120b-a12b` (Text Analysis)
-* **Deployment**: GitHub Pages (static)
+* **Deployment**: GitHub Pages (static) with GitHub Actions CI/CD
 
 ## 💻 Running Locally
 
 1. Clone this repository.
-2. Open `docs/index.html` in your browser — that's it!
-3. Click the ⚙️ icon to enter your OpenRouter API key for live AI analysis.
-
-### For local Next.js backend (optional):
-1. Copy `.env.example` to `.env.local` and add your OpenRouter API key.
-2. Run `npm install` then `npm run dev`.
-3. Open `LIVE_DASHBOARD.html` in your browser.
+2. Copy `.env.example` to `.env.local` and add your [OpenRouter API key](https://openrouter.ai/keys).
+3. Run `npm install` then `npm run dev`.
+4. Open `LIVE_DASHBOARD.html` in your browser.
 
 ## 👨‍💻 Developed By
 

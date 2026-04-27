@@ -1,7 +1,8 @@
 // EcoSort AI Dashboard - Nemotron Two-Step Pipeline
-// API calls are now securely routed through the Next.js backend
+// API key is injected at deploy time via GitHub Actions (never in source code)
 const NEMOTRON_VL = 'nvidia/nemotron-nano-12b-v2-vl:free';          // Step 1: Vision (sees the image)
 const NEMOTRON_ULTRA = 'nvidia/nemotron-3-super-120b-a12b:free';   // Step 2: Deep analysis (text)
+const BUILTIN_API_KEY = '__OPENROUTER_API_KEY__';
 
 // State
 let sessionData = {
@@ -23,9 +24,7 @@ function initDashboard() {
     loadHistory();
     setupUpload();
     setupButtons();
-    setupSettings();
     initChart();
-    updateSettingsIndicator();
 }
 
 function loadHistory() {
@@ -143,11 +142,6 @@ function setupButtons() {
     $('optimize-btn').addEventListener('click', simulateRoute);
 }
 
-function setupSettings() {
-    const settingsBtn = document.getElementById('settings-btn');
-    if (settingsBtn) settingsBtn.addEventListener('click', showSettingsModal);
-}
-
 // Camera Implementation
 async function startWebcam() {
     try {
@@ -224,79 +218,11 @@ function resizeImage(base64Str, maxWidth = 800, maxHeight = 800) {
     });
 }
 
-// --- API Key Management ---
-function getApiKey() {
-    return localStorage.getItem('ecosort_api_key') || '';
-}
-
-function setApiKey(key) {
-    localStorage.setItem('ecosort_api_key', key.trim());
-}
-
-function showSettingsModal() {
-    const existing = document.getElementById('settings-modal');
-    if (existing) existing.remove();
-
-    const modal = document.createElement('div');
-    modal.id = 'settings-modal';
-    modal.className = 'fixed inset-0 z-[60] flex items-center justify-center';
-    modal.innerHTML = `
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="settings-backdrop"></div>
-        <div class="relative glass-card p-8 w-full max-w-md mx-4 animate-slide-up">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-3">
-                    <i data-lucide="settings" class="text-violet-400 w-5 h-5"></i>
-                    <h2 class="text-lg font-bold text-white">API Settings</h2>
-                </div>
-                <button id="close-settings-btn" class="text-slate-400 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <p class="text-slate-400 text-sm mb-4">Enter your <a href="https://openrouter.ai/keys" target="_blank" class="text-violet-400 underline">OpenRouter API Key</a> to enable live AI analysis. The key is stored only in your browser's localStorage and never sent to any server other than OpenRouter.</p>
-            <input id="api-key-input" type="password" placeholder="sk-or-v1-..." value="${getApiKey()}"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-violet-500 mb-4" />
-            <div class="flex gap-3">
-                <button id="save-key-btn" class="flex-1 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm font-bold transition-colors">Save Key</button>
-                <button id="clear-key-btn" class="py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl text-sm font-bold transition-colors">Clear</button>
-            </div>
-            <p class="text-slate-600 text-[10px] mt-4 text-center uppercase tracking-wider font-bold">Without a key, the dashboard runs in demo/fallback mode</p>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    lucide.createIcons();
-
-    document.getElementById('settings-backdrop').addEventListener('click', () => modal.remove());
-    document.getElementById('close-settings-btn').addEventListener('click', () => modal.remove());
-    document.getElementById('save-key-btn').addEventListener('click', () => {
-        setApiKey(document.getElementById('api-key-input').value);
-        showToast('API key saved!', 'success');
-        updateSettingsIndicator();
-        modal.remove();
-    });
-    document.getElementById('clear-key-btn').addEventListener('click', () => {
-        localStorage.removeItem('ecosort_api_key');
-        document.getElementById('api-key-input').value = '';
-        showToast('API key cleared — fallback mode active', 'info');
-        updateSettingsIndicator();
-    });
-}
-
-function updateSettingsIndicator() {
-    const dot = document.getElementById('api-status-dot');
-    if (!dot) return;
-    if (getApiKey()) {
-        dot.className = 'w-1.5 h-1.5 bg-emerald-500 rounded-full';
-        dot.title = 'API key set — live mode';
-    } else {
-        dot.className = 'w-1.5 h-1.5 bg-amber-500 rounded-full';
-        dot.title = 'No API key — demo mode';
-    }
-}
-
-// Helper: call OpenRouter API directly (no backend proxy needed)
+// Helper: call OpenRouter API directly using built-in key
+// The BUILTIN_API_KEY placeholder is replaced at deploy time by GitHub Actions
 async function callOpenRouter(model, messages, maxTokens = 800) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
+    const apiKey = BUILTIN_API_KEY;
+    if (!apiKey || apiKey === '__OPENROUTER_API_KEY__') {
         throw new Error('NO_API_KEY');
     }
 
