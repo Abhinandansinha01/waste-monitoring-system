@@ -222,7 +222,7 @@ function resizeImage(base64Str, maxWidth = 800, maxHeight = 800) {
 // The BUILTIN_API_KEY placeholder is replaced at deploy time by GitHub Actions
 async function callOpenRouter(model, messages, maxTokens = 800) {
     const apiKey = BUILTIN_API_KEY;
-    if (!apiKey || apiKey === '__OPENROUTER_API_KEY__') {
+    if (!apiKey || apiKey.includes('OPENROUTER_API_KEY')) {
         throw new Error('NO_API_KEY');
     }
 
