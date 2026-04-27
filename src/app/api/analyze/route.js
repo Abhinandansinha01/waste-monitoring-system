@@ -14,7 +14,10 @@ export async function POST(request) {
   try {
     const { model, messages, maxTokens } = await request.json();
 
-    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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';
+    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+    if (!OPENROUTER_API_KEY) {
+      return NextResponse.json({ error: 'API key not configured on server' }, { status: 500, headers: corsHeaders });
+    }
 
     const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',

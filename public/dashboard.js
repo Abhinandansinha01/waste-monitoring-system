@@ -23,7 +23,9 @@ function initDashboard() {
     loadHistory();
     setupUpload();
     setupButtons();
+    setupSettings();
     initChart();
+    updateSettingsIndicator();
 }
 
 function loadHistory() {
@@ -141,6 +143,11 @@ function setupButtons() {
     $('optimize-btn').addEventListener('click', simulateRoute);
 }
 
+function setupSettings() {
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) settingsBtn.addEventListener('click', showSettingsModal);
+}
+
 // Camera Implementation
 async function startWebcam() {
     try {
@@ -217,22 +224,95 @@ function resizeImage(base64Str, maxWidth = 800, maxHeight = 800) {
     });
 }
 
-// Helper: call backend API
+// --- API Key Management ---
+function getApiKey() {
+    return localStorage.getItem('ecosort_api_key') || '';
+}
+
+function setApiKey(key) {
+    localStorage.setItem('ecosort_api_key', key.trim());
+}
+
+function showSettingsModal() {
+    const existing = document.getElementById('settings-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'settings-modal';
+    modal.className = 'fixed inset-0 z-[60] flex items-center justify-center';
+    modal.innerHTML = `
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="settings-backdrop"></div>
+        <div class="relative glass-card p-8 w-full max-w-md mx-4 animate-slide-up">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="settings" class="text-violet-400 w-5 h-5"></i>
+                    <h2 class="text-lg font-bold text-white">API Settings</h2>
+                </div>
+                <button id="close-settings-btn" class="text-slate-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-slate-400 text-sm mb-4">Enter your <a href="https://openrouter.ai/keys" target="_blank" class="text-violet-400 underline">OpenRouter API Key</a> to enable live AI analysis. The key is stored only in your browser's localStorage and never sent to any server other than OpenRouter.</p>
+            <input id="api-key-input" type="password" placeholder="sk-or-v1-..." value="${getApiKey()}"
+                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-violet-500 mb-4" />
+            <div class="flex gap-3">
+                <button id="save-key-btn" class="flex-1 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm font-bold transition-colors">Save Key</button>
+                <button id="clear-key-btn" class="py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl text-sm font-bold transition-colors">Clear</button>
+            </div>
+            <p class="text-slate-600 text-[10px] mt-4 text-center uppercase tracking-wider font-bold">Without a key, the dashboard runs in demo/fallback mode</p>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    lucide.createIcons();
+
+    document.getElementById('settings-backdrop').addEventListener('click', () => modal.remove());
+    document.getElementById('close-settings-btn').addEventListener('click', () => modal.remove());
+    document.getElementById('save-key-btn').addEventListener('click', () => {
+        setApiKey(document.getElementById('api-key-input').value);
+        showToast('API key saved!', 'success');
+        updateSettingsIndicator();
+        modal.remove();
+    });
+    document.getElementById('clear-key-btn').addEventListener('click', () => {
+        localStorage.removeItem('ecosort_api_key');
+        document.getElementById('api-key-input').value = '';
+        showToast('API key cleared — fallback mode active', 'info');
+        updateSettingsIndicator();
+    });
+}
+
+function updateSettingsIndicator() {
+    const dot = document.getElementById('api-status-dot');
+    if (!dot) return;
+    if (getApiKey()) {
+        dot.className = 'w-1.5 h-1.5 bg-emerald-500 rounded-full';
+        dot.title = 'API key set — live mode';
+    } else {
+        dot.className = 'w-1.5 h-1.5 bg-amber-500 rounded-full';
+        dot.title = 'No API key — demo mode';
+    }
+}
+
+// Helper: call OpenRouter API directly (no backend proxy needed)
 async function callOpenRouter(model, messages, maxTokens = 800) {
-    const apiUrl = window.location.protocol === 'file:' 
-        ? 'http://localhost:3000/api/analyze' 
-        : '/api/analyze';
-        
-    const resp = await fetch(apiUrl, {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        throw new Error('NO_API_KEY');
+    }
+
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': window.location.href,
+            'X-Title': 'EcoSort AI Dashboard'
         },
-        body: JSON.stringify({ model, messages, maxTokens })
+        body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.3 })
     });
     if (!resp.ok) {
         const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.error || `API Error ${resp.status}`);
+        throw new Error(errData.error?.message || `API Error ${resp.status}`);
     }
     const data = await resp.json();
     return data.choices?.[0]?.message?.content || '';
