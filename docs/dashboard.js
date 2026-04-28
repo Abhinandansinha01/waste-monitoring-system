@@ -226,22 +226,38 @@ async function callOpenRouter(model, messages, maxTokens = 800) {
         throw new Error('NO_API_KEY');
     }
 
-    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.href,
-            'X-Title': 'EcoSort AI Dashboard'
-        },
-        body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.3 })
-    });
-    if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.error?.message || `API Error ${resp.status}`);
+    // 8-second timeout to prevent awkward presentation hangs
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    try {
+        const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            signal: controller.signal,
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': window.location.href,
+                'X-Title': 'EcoSort AI Dashboard'
+            },
+            body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.3 })
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            throw new Error(errData.error?.message || `API Error ${resp.status}`);
+        }
+        const data = await resp.json();
+        return data.choices?.[0]?.message?.content || '';
+    } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+            throw new Error('API Timeout: Server is taking too long.');
+        }
+        throw err;
     }
-    const data = await resp.json();
-    return data.choices?.[0]?.message?.content || '';
 }
 
 async function analyzeWithNemotron(base64Image) {
@@ -358,42 +374,48 @@ Rules: all scores 0-100. toxicity_level: 0=completely safe, 100=extremely toxic.
                 let decomp = "10 - 100 years";
                 let summary = "This item appears to be general waste. Please ensure it is disposed of properly to avoid landfill overflow.";
 
-                if (topPrediction.match(/bottle|jug|cup|plastic|wrapper|bag|container|cup/)) {
+                if (topPrediction.match(/bottle|jug|cup|plastic|wrapper|bag|container|mug|flask/)) {
                     category = "Recyclable"; tox = 15; recyc = 85; haz = 20; co2 = 0.2;
                     disposal = "Empty contents and place in the plastics recycling bin.";
                     material = "Polyethylene or similar plastic polymer.";
                     decomp = "400+ years";
                     summary = "Plastic items should always be recycled to prevent microplastic pollution in our ecosystems.";
-                } else if (topPrediction.match(/can|tin|aluminum|metal|foil|bucket|pot/)) {
+                } else if (topPrediction.match(/can|tin|aluminum|metal|foil|bucket|pot|key|coin|silverware|fork|spoon/)) {
                     category = "Recyclable"; tox = 5; recyc = 95; haz = 10; co2 = 0.5;
                     disposal = "Rinse out and place in the metals recycling bin.";
-                    material = "Aluminum or steel.";
+                    material = "Aluminum, steel, or mixed metal.";
                     decomp = "50-200 years";
                     summary = "Metals are highly recyclable and recycling them saves up to 90% of the energy required to mine new ore.";
-                } else if (topPrediction.match(/paper|cardboard|box|book|tissue|envelope|carton/)) {
+                } else if (topPrediction.match(/paper|cardboard|box|book|tissue|envelope|carton|notebook|receipt/)) {
                     category = "Recyclable"; tox = 5; recyc = 90; haz = 5; co2 = 0.05;
                     disposal = "Keep dry and place in the paper recycling bin.";
                     material = "Wood pulp fibers.";
                     decomp = "2-6 weeks";
                     summary = "Paper products are easily recyclable. Keep them clean and dry to ensure they can be processed.";
-                } else if (topPrediction.match(/apple|banana|food|fruit|vegetable|meat|bread|leaf|plant|orange|lemon|strawberry/)) {
+                } else if (topPrediction.match(/apple|banana|food|fruit|vegetable|meat|bread|leaf|plant|orange|lemon|strawberry|flower/)) {
                     category = "Organic"; tox = 0; recyc = 100; haz = 0; co2 = 0.01;
                     disposal = "Place in the green compost or organic waste bin.";
                     material = "Biodegradable organic matter.";
                     decomp = "1-4 weeks";
                     summary = "Composting organic matter produces nutrient-rich soil and prevents methane gas release in landfills.";
-                } else if (topPrediction.match(/battery|phone|computer|electronic|laptop|screen|tv|wire|mouse|keyboard|ipod|remote/)) {
+                } else if (topPrediction.match(/battery|phone|computer|electronic|laptop|screen|tv|wire|mouse|keyboard|ipod|remote|camera/)) {
                     category = "Hazardous"; tox = 90; recyc = 40; haz = 95; co2 = 1.5;
                     disposal = "Take to a specialized e-waste or battery collection center.";
                     material = "Mixed metals, plastics, and toxic heavy metals.";
                     decomp = "1000+ years";
                     summary = "E-waste contains highly toxic chemicals that will leach into groundwater if thrown in standard bins.";
-                } else if (topPrediction.match(/glass|jar|window|goblet/)) {
+                } else if (topPrediction.match(/glass|jar|window|goblet|spectacles|glasses/)) {
                     category = "Recyclable"; tox = 0; recyc = 100; haz = 5; co2 = 0.3;
                     disposal = "Rinse carefully and place in the glass recycling bin.";
                     material = "Silica sand, soda ash, and limestone.";
                     decomp = "1 Million+ years";
                     summary = "Glass is 100% infinitely recyclable without any loss in purity or quality.";
+                } else if (topPrediction.match(/wallet|purse|backpack|shoe|fabric|cloth|shirt|pants|jacket/)) {
+                    category = "General"; tox = 15; recyc = 30; haz = 10; co2 = 0.4;
+                    disposal = "Donate if usable, otherwise dispose in general waste or textile recycling.";
+                    material = "Mixed textiles, leather, or synthetic fibers.";
+                    decomp = "20-200 years";
+                    summary = "Textiles can often be repurposed or donated. If heavily soiled or mixed material, they go to standard landfill.";
                 }
 
                 const fb = {
