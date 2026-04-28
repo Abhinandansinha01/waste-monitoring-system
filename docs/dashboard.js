@@ -2,7 +2,7 @@
 // API key is injected at deploy time via GitHub Actions (never in source code)
 const NEMOTRON_VL = 'google/gemma-4-31b-it:free';          // Step 1: Vision (sees the image) - Gemma 4 (Nemotron VL is unstable)
 const NEMOTRON_ULTRA = 'nvidia/nemotron-3-super-120b-a12b:free';   // Step 2: Deep analysis (text)
-const BUILTIN_API_KEY = '__OPENROUTER_API_KEY__';
+const BUILTIN_API_KEY = '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';
 
 // State
 let sessionData = {
