@@ -1,7 +1,7 @@
 // EcoSort AI Dashboard - Nemotron Two-Step Pipeline
 // API key is injected at deploy time via GitHub Actions (never in source code)
-const NEMOTRON_VL = 'google/gemma-4-31b-it:free';          // Step 1: Vision (sees the image) - Gemma 4 (Nemotron VL is unstable)
-const NEMOTRON_ULTRA = 'nvidia/nemotron-3-super-120b-a12b:free';   // Step 2: Deep analysis (text)
+const NEMOTRON_VL = 'meta-llama/llama-3.2-11b-vision-instruct:free'; // Step 1: Vision (Llama 3.2 11B Vision is highly stable & free)
+const NEMOTRON_ULTRA = 'nvidia/llama-3.1-nemotron-70b-instruct:free'; // Step 2: Deep analysis (Nemotron 70B)
 const BUILTIN_API_KEY = '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';
 
 // State
@@ -226,9 +226,9 @@ async function callOpenRouter(model, messages, maxTokens = 800) {
         throw new Error('NO_API_KEY');
     }
 
-    // 8-second timeout to prevent awkward presentation hangs
+    // 15-second timeout to allow the Vision and 70B models to process
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
         const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
