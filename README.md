@@ -25,7 +25,7 @@ This project is deployed live on GitHub Pages:
 
 * **Frontend**: Vanilla JS, HTML5, TailwindCSS, Chart.js, Lucide Icons
 * **AI Provider**: OpenRouter API (called directly from client)
-* **AI Models**: `nvidia/nemotron-nano-12b-v2-vl` (Vision) & `nvidia/nemotron-3-super-120b-a12b` (Text Analysis)
+* **AI Models**: `meta-llama/llama-3.2-11b-vision-instruct` (Vision) & `nvidia/llama-3.1-nemotron-70b-instruct` (Text Analysis)
 * **Deployment**: GitHub Pages (static) with GitHub Actions CI/CD
 
 ## 💻 Running Locally
@@ -37,8 +37,13 @@ This project is deployed live on GitHub Pages:
 
 ## 👨‍💻 Developed By
 
-**Abhinandan Sinha**  
-Registration No: **12303165**  
-Roll No: **27**  
+**Project Group Number: 2RGD0045**
 
-[🔗 Connect on LinkedIn](https://www.linkedin.com/in/abhinandansinha01/)
+**Team Members:**
+1. **Satyam Kumar** (12322276)
+2. **Abhinandan Sinha** (12303165)
+3. **Abhishek** (12221244)
+4. **Md Sufyan** (12220667)
+5. **Aravind Kosuru** (12214743)
+
+**Guided By:** Mr. Rakshit Bansal

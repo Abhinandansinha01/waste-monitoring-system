@@ -125,22 +125,68 @@
         }
 
         .slide {
-            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
             width: 100%;
             max-width: 1200px;
+            margin: 0 auto;
             height: 100%;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             opacity: 0;
-            transform: translateY(20px) scale(0.95);
-            transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(30px) scale(0.95);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .slide.active {
-            display: flex;
             opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
             transform: translateY(0) scale(1);
+        }
+
+        /* Premium Animations */
+        .slide.active h1, .slide.active h2 {
+            animation: slideUpFade 0.6s ease-out forwards;
+        }
+        
+        .slide.active p:not(.presenter-card p) {
+            animation: slideUpFade 0.6s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+
+        .slide.active ul li {
+            animation: slideInRight 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .slide.active .col-2 > div {
+            animation: slideUpFade 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        .slide.active .col-2 > div:nth-child(1) { animation-delay: 0.2s; }
+        .slide.active .col-2 > div:nth-child(2) { animation-delay: 0.4s; }
+
+        .slide.active ul li:nth-child(1) { animation-delay: 0.1s; }
+        .slide.active ul li:nth-child(2) { animation-delay: 0.2s; }
+        .slide.active ul li:nth-child(3) { animation-delay: 0.3s; }
+        .slide.active ul li:nth-child(4) { animation-delay: 0.4s; }
+        .slide.active ul li:nth-child(5) { animation-delay: 0.5s; }
+        .slide.active ul li:nth-child(6) { animation-delay: 0.6s; }
+        .slide.active ul li:nth-child(7) { animation-delay: 0.7s; }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         h1 {
@@ -311,14 +357,32 @@
             <h1 style="max-width: 900px; line-height: 1.2;">AI-Powered Smart Waste Segregation and Monitoring System
             </h1>
 
-            <div class="presenter-card">
-                <p
-                    style="color: var(--text-dim); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">
-                    Presented By</p>
-                <h3 style="font-size: 2rem; color: white; margin-bottom: 0.5rem;">Abhinandan Sinha</h3>
-                <div style="display: flex; gap: 2rem; justify-content: center; color: var(--text-dim);">
-                    <span>Reg No: <strong style="color: var(--primary)">12303165</strong></span>
-                    <span>Roll No: <strong style="color: var(--secondary)">27</strong></span>
+            <div class="presenter-card" style="width: 100%; max-width: 900px; padding: 1.5rem; margin-top: 1rem;">
+                <p style="color: var(--text-dim); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Project Group: 2RGD0045</p>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; margin-bottom: 1rem;">
+                    <div>
+                        <h4 style="font-size: 1.2rem; color: white; margin-bottom: 0.2rem;">Satyam Kumar</h4>
+                        <span style="color: var(--text-dim); font-size: 0.9rem;">Reg: <strong style="color: var(--primary)">12322276</strong></span>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.2rem; color: white; margin-bottom: 0.2rem;">Abhinandan Sinha</h4>
+                        <span style="color: var(--text-dim); font-size: 0.9rem;">Reg: <strong style="color: var(--primary)">12303165</strong></span>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.2rem; color: white; margin-bottom: 0.2rem;">Abhishek</h4>
+                        <span style="color: var(--text-dim); font-size: 0.9rem;">Reg: <strong style="color: var(--primary)">12221244</strong></span>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.2rem; color: white; margin-bottom: 0.2rem;">Md Sufyan</h4>
+                        <span style="color: var(--text-dim); font-size: 0.9rem;">Reg: <strong style="color: var(--primary)">12220667</strong></span>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.2rem; color: white; margin-bottom: 0.2rem;">Aravind Kosuru</h4>
+                        <span style="color: var(--text-dim); font-size: 0.9rem;">Reg: <strong style="color: var(--primary)">12214743</strong></span>
+                    </div>
+                </div>
+                <div style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    Guided by: <strong style="color: var(--secondary)">Mr. Rakshit Bansal</strong>
                 </div>
             </div>
 
@@ -434,16 +498,37 @@
 
         <!-- Slide 9: Professional Profile -->
         <div class="slide">
-            <h2>Professional Profile & Repository</h2>
+            <h2>Team Members & Repository</h2>
             <div class="presenter-card"
-                style="width: 100%; max-width: 800px; padding: 2.5rem; border-color: rgba(34, 197, 94, 0.3);">
-                <h3 style="font-size: 3rem; color: white; margin-bottom: 0.5rem;">Abhinandan Sinha</h3>
-                <div style="font-size: 1.5rem; color: var(--text-dim); margin-bottom: 2rem;">
-                    Reg No: <strong style="color: var(--primary)">12303165</strong>
+                style="width: 100%; max-width: 1000px; padding: 2.5rem; border-color: rgba(34, 197, 94, 0.3);">
+                
+                <h3 style="font-size: 1.5rem; color: var(--text-dim); margin-bottom: 1.5rem;">Group: 2RGD0045</h3>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-bottom: 2rem;">
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.05); min-width: 160px;">
+                        <h4 style="font-size: 1.2rem; color: white;">Satyam Kumar</h4>
+                        <span style="color: var(--primary);">12322276</span>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.05); min-width: 160px;">
+                        <h4 style="font-size: 1.2rem; color: white;">Abhinandan Sinha</h4>
+                        <span style="color: var(--primary);">12303165</span>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.05); min-width: 160px;">
+                        <h4 style="font-size: 1.2rem; color: white;">Abhishek</h4>
+                        <span style="color: var(--primary);">12221244</span>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.05); min-width: 160px;">
+                        <h4 style="font-size: 1.2rem; color: white;">Md Sufyan</h4>
+                        <span style="color: var(--primary);">12220667</span>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.05); min-width: 160px;">
+                        <h4 style="font-size: 1.2rem; color: white;">Aravind Kosuru</h4>
+                        <span style="color: var(--primary);">12214743</span>
+                    </div>
                 </div>
 
                 <h3 class="col-title" style="justify-content: center; margin-bottom: 1rem; color: var(--accent);">🔗
-                    Connect & Review</h3>
+                    Project Links</h3>
                 <ul style="align-items: center; width: 100%;">
                     <li
                         style="width: 100%; justify-content: center; font-size: 1.5rem; flex-direction: column; text-align: center;">
@@ -455,11 +540,7 @@
                         <span style="font-size: 1rem; color: var(--text-dim);">(Proof of project timeline, version
                             control, and source code)</span>
                     </li>
-                    <li style="width: 100%; justify-content: center; font-size: 1.5rem;">
-                        <strong>LinkedIn Profile:</strong>&nbsp;<a href="https://www.linkedin.com/in/abhinandansinha01/"
-                            target="_blank"
-                            style="color: var(--secondary); text-decoration: none;">linkedin.com/in/abhinandansinha01</a>
-                    </li>
+
                 </ul>
             </div>
         </div>

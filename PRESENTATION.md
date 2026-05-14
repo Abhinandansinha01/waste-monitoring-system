@@ -4,7 +4,16 @@
 
 **Title:** AI-Powered Smart Waste Segregation and Monitoring System
 **Subtitle:** Revolutionizing Waste Management with Artificial Intelligence
-**Presenter:** Abhinandan Sinha
+**Project Group Number:** 2RGD0045
+
+**Team Members:**
+1. Satyam Kumar (12322276)
+2. Abhinandan Sinha (12303165)
+3. Abhishek (12221244)
+4. Md Sufyan (12220667)
+5. Aravind Kosuru (12214743)
+
+**Guided By:** Mr. Rakshit Bansal
 
 ---
 
@@ -65,15 +74,21 @@ We propose a smart system that automates the thinking process of waste managemen
 4. **Advanced Plastic Detection:**
     * Upgrade AI to distinguish between different types of plastics (PET, HDPE) for higher recycling value.
 
-## Slide 6: Professional Profile & Repository Details
+## Slide 6: Team & Repository Details
 
-**Abhinandan Sinha**  
-Reg No: **12303165**
+**Project Group Number:** 2RGD0045
+
+**Team Members:**
+* **Satyam Kumar** (12322276)
+* **Abhinandan Sinha** (12303165)
+* **Abhishek** (12221244)
+* **Md Sufyan** (12220667)
+* **Aravind Kosuru** (12214743)
 
 **🔗 Connect & Review:**
 
 * **GitHub Project Repository**: [waste-monitoring-system](https://github.com/Abhinandansinha01/waste-monitoring-system) (Project source code & version history)
-* **LinkedIn Profile**: [linkedin.com/in/abhinandansinha01](https://www.linkedin.com/in/abhinandansinha01/)
+
 
 ---
 
